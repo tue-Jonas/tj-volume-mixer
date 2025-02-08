@@ -1,21 +1,30 @@
 document.addEventListener("DOMContentLoaded", () => {
   chrome.tabs.query({ audible: true }, (tabs) => {
     const tabList = document.getElementById("tabList");
+
+    // If no audible tabs, show an info message
+    if (tabs.length === 0) {
+      const infoItem = document.createElement("li");
+      infoItem.className = "no-audio";
+      infoItem.textContent = "No tabs are playing audio.";
+      tabList.appendChild(infoItem);
+    }
+
+    // For each audible tab, create a list item with a header and slider
     tabs.forEach((tab) => {
-      // Create container for each tab
       const li = document.createElement("li");
       li.className = "tab-item";
 
-      // Create a header for the tab that holds the favicon and title
+      // Create a header container for the favicon and title
       const headerDiv = document.createElement("div");
       headerDiv.className = "tab-header";
 
-      // Create favicon image element; use a fallback if not available
+      // Favicon image (fallback to a default icon if not available)
       const faviconImg = document.createElement("img");
-      faviconImg.src = tab.favIconUrl || "default-icon.png"; // Provide default-icon.png in your extension assets
+      faviconImg.src = tab.favIconUrl || "default-icon.png"; // Ensure default-icon.png is in your assets
       faviconImg.alt = "Tab Icon";
 
-      // Create title element
+      // Tab title
       const titleSpan = document.createElement("span");
       titleSpan.textContent = tab.title || tab.url;
       titleSpan.className = "tab-title";
@@ -23,7 +32,7 @@ document.addEventListener("DOMContentLoaded", () => {
       headerDiv.appendChild(faviconImg);
       headerDiv.appendChild(titleSpan);
 
-      // Create volume slider element
+      // Volume slider
       const slider = document.createElement("input");
       slider.type = "range";
       slider.min = 0;
@@ -32,7 +41,6 @@ document.addEventListener("DOMContentLoaded", () => {
       slider.value = 1;
       slider.dataset.tabId = tab.id;
 
-      // Listen for slider changes to send volume update message
       slider.addEventListener("input", (e) => {
         const newVolume = parseFloat(e.target.value);
         const tabId = parseInt(e.target.dataset.tabId, 10);
@@ -48,7 +56,7 @@ document.addEventListener("DOMContentLoaded", () => {
         );
       });
 
-      // Append header and slider to the tab container
+      // Append header and slider to the list item
       li.appendChild(headerDiv);
       li.appendChild(slider);
       tabList.appendChild(li);

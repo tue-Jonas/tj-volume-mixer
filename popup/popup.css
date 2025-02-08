@@ -20,7 +20,7 @@ body {
 }
 
 h1 {
-  font-size: 1.5em;
+  font-size: 1.75em;
   margin: 0;
 }
 
@@ -86,4 +86,11 @@ input[type="range"]::-webkit-slider-thumb {
 
 input[type="range"]:focus {
   outline: none;
+}
+
+.no-audio {
+  text-align: center;
+  color: #777;
+  font-size: 1em;
+  padding: 15px;
 }
