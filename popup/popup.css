@@ -26,6 +26,9 @@ h1 {
 
 /* Remove default list styling */
 #tabList {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
   list-style: none;
   padding: 0;
   margin: 0;
@@ -35,7 +38,6 @@ h1 {
 .tab-item {
   border-radius: 5px;
   padding: 10px;
-  margin-bottom: 10px;
   box-shadow: 0px 0px 5px 0px rgba(0, 0, 0, 0.25);
 }
 
