@@ -19,5 +19,8 @@
     "16": "logo/logo-16.png",
     "48": "logo/logo-48.png",
     "128": "logo/logo-128.png"
-  }
+  },
+  "host_permissions": [
+    "<all_urls>"
+  ]
 }
