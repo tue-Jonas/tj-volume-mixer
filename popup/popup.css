@@ -1,7 +1,92 @@
+/* General layout and typography */
 body {
-  width: 300px;
+  width: 320px;
+  font-family: 'Helvetica Neue', Arial, sans-serif;
+  margin: 0;
+  padding: 10px;
+  background-color: #f8f9fa;
+  color: #333;
 }
 
+/* Header styling */
 .header {
   display: flex;
+  align-items: center;
+  margin-bottom: 15px;
+}
+
+.header img {
+  margin-right: 10px;
+}
+
+h1 {
+  font-size: 1.2em;
+  margin: 0;
+}
+
+/* Remove default list styling */
+#tabList {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+/* Each tab container */
+.tab-item {
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  padding: 10px;
+  margin-bottom: 10px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+/* Header within each tab box */
+.tab-header {
+  display: flex;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+/* Favicon styling */
+.tab-header img {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  margin-right: 8px;
+  object-fit: cover;
+}
+
+/* Tab title styling */
+.tab-title {
+  font-size: 0.95em;
+  font-weight: bold;
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Slider styling */
+input[type="range"] {
+  width: 100%;
+  -webkit-appearance: none;
+  background: #ddd;
+  height: 4px;
+  border-radius: 2px;
+  outline: none;
+}
+
+input[type="range"]::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: #007bff;
+  cursor: pointer;
+  border: none;
+}
+
+input[type="range"]:focus {
+  outline: none;
 }
