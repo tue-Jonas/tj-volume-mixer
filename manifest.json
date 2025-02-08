@@ -1,0 +1,14 @@
+{
+  "name": "TJ Volume Mixer",
+  "description": "Individual volume control for each chrome tab",
+  "version": "0.0.1",
+  "manifest_version": 3,
+  "permissions": ["tabs", "activeTab", "scripting"],
+  "action": {
+    "default_popup": "popup/popup.html"
+    // "default_icon": "hello_extensions.png"
+  },
+  "background": {
+    "service_worker": "js/background.js"
+  }
+} 
