@@ -86,9 +86,9 @@ export default function Popup() {
               alignItems: "flex-start",
             }}
           >
-            <Box display="flex" gap={"10px"} width="100%" alignItems="center">
+            <Box display="flex" width="100%" alignItems="center">
               <ListItemAvatar style={{ minWidth: 35 }}>
-                <Avatar sx={{ width: 35, height: 35 }} variant="square" src={tab.favIconUrl || "default-icon.png"} />
+                <Avatar sx={{ width: 35, height: 35, margin: "0 0 22px 10px" }} variant="square" src={tab.favIconUrl || "default-icon.png"} />
               </ListItemAvatar>
               <Box
                 width="100%"
@@ -97,7 +97,7 @@ export default function Popup() {
                   overflow: "hidden",
                   textOverflow: "ellipsis",
                   whiteSpace: "nowrap",
-                  padding: "15px 25px",
+                  padding: "0px 25px 15px 25px",
                 }}
               >
                 <ListItemText
