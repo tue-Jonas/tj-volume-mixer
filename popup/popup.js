@@ -16,7 +16,6 @@ document.addEventListener("DOMContentLoaded", () => {
               func: () => {
                 const mediaElements = document.querySelectorAll("audio, video");
                 for (const media of mediaElements) {
-                  // Check if the media element has a non-empty source.
                   if ((media.currentSrc && media.currentSrc.trim() !== "") || (media.src && media.src.trim() !== "")) {
                     return true;
                   }
@@ -54,7 +53,7 @@ document.addEventListener("DOMContentLoaded", () => {
           headerDiv.className = "tab-header";
 
           const faviconImg = document.createElement("img");
-          faviconImg.src = tab.favIconUrl || "default-icon.png"; // Ensure default-icon.png is available in your assets.
+          faviconImg.src = tab.favIconUrl || "default-icon.png"; // Ensure default-icon.png is available.
           faviconImg.alt = "Tab Icon";
 
           const titleSpan = document.createElement("span");
@@ -73,8 +72,15 @@ document.addEventListener("DOMContentLoaded", () => {
           slider.value = 1;
           slider.dataset.tabId = tab.id;
 
+          // Create a span to display the slider value as a percentage.
+          const percentageLabel = document.createElement("span");
+          percentageLabel.className = "slider-percentage";
+          percentageLabel.textContent = Math.round(slider.value * 100) + "%";
+
+          // Listen for slider changes.
           slider.addEventListener("input", (e) => {
             const newVolume = parseFloat(e.target.value);
+            percentageLabel.textContent = Math.round(newVolume * 100) + "%";
             const tabId = parseInt(e.target.dataset.tabId, 10);
             chrome.runtime.sendMessage(
               {
@@ -88,8 +94,10 @@ document.addEventListener("DOMContentLoaded", () => {
             );
           });
 
+          // Append header, slider, and percentage label to the tab container.
           li.appendChild(headerDiv);
           li.appendChild(slider);
+          li.appendChild(percentageLabel);
           tabList.appendChild(li);
         });
       }
