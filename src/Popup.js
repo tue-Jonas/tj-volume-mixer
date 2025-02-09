@@ -1,6 +1,7 @@
 // src/Popup.jsx
 import React, { useEffect, useState } from "react";
 import { Slider, List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box } from "@mui/material";
+import "./popup.css";
 
 export default function Popup() {
   const [tabs, setTabs] = useState([]);
@@ -62,44 +63,68 @@ export default function Popup() {
   };
 
   if (tabs.length === 0) {
-    return <Typography>No tabs are playing audio or have valid media elements.</Typography>;
+    return <Typography>No tab is playing audio.</Typography>;
   }
 
   return (
-    <>
-      <List>
+    <div className="list-container">
+      <List
+        disablePadding
+        style={{
+          display: "flex",
+          flexDirection: "column",
+          gap: "10px",
+        }}
+      >
         {tabs.map((tab) => (
           <ListItem
             key={tab.id}
+            className="list-item"
+            disablePadding
             style={{
-              border: "1px solid #e0e0e0",
-              borderRadius: "8px",
-              marginBottom: "10px",
-              padding: "10px",
               flexDirection: "column",
               alignItems: "flex-start",
             }}
           >
-            <Box display="flex" width="100%" alignItems="center">
-              <ListItemAvatar>
-                <Avatar src={tab.favIconUrl || "default-icon.png"} />
+            <Box display="flex" gap={"10px"} width="100%" alignItems="center">
+              <ListItemAvatar style={{ minWidth: 35 }}>
+                <Avatar sx={{ width: 35, height: 35 }} variant="square" src={tab.favIconUrl || "default-icon.png"} />
               </ListItemAvatar>
-              <ListItemText primary={tab.title || tab.url} />
-            </Box>
-            <Box width="100%" mt={1}>
-              <Slider
-                defaultValue={100}
-                valueLabelDisplay="auto"
-                step={1}
-                marks
-                min={0}
-                max={100}
-                onChangeCommitted={(event, value) => handleVolumeChange(tab.id, value)}
-              />
+              <Box
+                width="100%"
+                sx={{
+                  minWidth: 0,
+                  overflow: "hidden",
+                  textOverflow: "ellipsis",
+                  whiteSpace: "nowrap",
+                  padding: "15px 25px",
+                }}
+              >
+                <ListItemText
+                  primaryTypographyProps={{
+                    style: {
+                      fontSize: "0.9rem",
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      display: "block",
+                    },
+                  }}
+                  primary={tab.title || tab.url}
+                />
+                <Slider
+                  defaultValue={100}
+                  valueLabelDisplay="auto"
+                  step={1}
+                  min={0}
+                  max={100}
+                  onChange={(event, value) => handleVolumeChange(tab.id, value)}
+                />
+              </Box>
             </Box>
           </ListItem>
         ))}
       </List>
-    </>
+    </div>
   );
 }
