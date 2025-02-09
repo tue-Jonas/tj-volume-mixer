@@ -34,7 +34,12 @@ export default function Popup() {
                 if (chrome.runtime.lastError || !results || results.length === 0) {
                   resolve({ tab, hasMedia: false });
                 } else {
-                  resolve({ tab, hasMedia: results[0].result });
+                  let hasMedia = results[0].result;
+                  // Fallback: if no media is detected but the URL is known (e.g., Twitch), assume it has media.
+                  if (!hasMedia && tab.url && tab.url.includes("twitch.tv")) {
+                    hasMedia = true;
+                  }
+                  resolve({ tab, hasMedia });
                 }
               }
             );
@@ -70,7 +75,6 @@ export default function Popup() {
   return (
     <>
       <Header />
-
       <div className="list-container">
         <List
           disablePadding
