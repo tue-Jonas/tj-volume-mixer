@@ -9,7 +9,7 @@
     "scripting"
   ],
   "action": {
-    "default_popup": "popup/popup.html",
+    "default_popup": "index.html",
     "default_title": "TJ Volume Mixer"
   },
   "background": {
