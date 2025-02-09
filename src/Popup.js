@@ -101,85 +101,85 @@ export default function Popup() {
     console.log(`Volume committed for tab ${tabId}`);
   };
 
-  if (tabs.length === 0) {
-    return <Typography>No tab is playing audio.</Typography>;
-  }
-
   return (
     <>
       <Header />
-      <div className="list-container">
-        <List
-          disablePadding
-          style={{
-            display: "flex",
-            flexDirection: "column",
-            gap: "10px",
-          }}
-        >
-          {tabs.map((tab) => {
-            // Get the live slider value, defaulting to 100 if not set.
-            const currentSliderValue = sliderValues[tab.id] !== undefined ? sliderValues[tab.id] : 100;
-            return (
-              <ListItem
-                key={tab.id}
-                className="list-item"
-                disablePadding
-                style={{
-                  flexDirection: "column",
-                  alignItems: "flex-start",
-                }}
-              >
-                <Box display="flex" width="100%" alignItems="center">
-                  <ListItemAvatar style={{ minWidth: 35 }}>
-                    <Avatar
-                      sx={{ width: 35, height: 35, margin: "0 0 22px 10px" }}
-                      variant="square"
-                      src={tab.favIconUrl || "default-icon.png"}
-                    />
-                  </ListItemAvatar>
-                  <Box
-                    width="100%"
-                    sx={{
-                      minWidth: 0,
-                      overflow: "hidden",
-                      textOverflow: "ellipsis",
-                      whiteSpace: "nowrap",
-                      padding: "0px 25px 15px 25px",
-                    }}
-                  >
-                    <ListItemText
-                      primaryTypographyProps={{
-                        style: {
-                          fontSize: "0.9rem",
-                          overflow: "hidden",
-                          textOverflow: "ellipsis",
-                          whiteSpace: "nowrap",
-                          display: "block",
-                        },
+      {tabs.length === 0 ? (
+        <Typography style={{ textAlign: "center" }}>No tab is playing audio.</Typography>
+      ) : (
+        <div className="list-container">
+          <List
+            disablePadding
+            style={{
+              display: "flex",
+              flexDirection: "column",
+              gap: "10px",
+            }}
+          >
+            {tabs.map((tab) => {
+              // Get the live slider value, defaulting to 100 if not set.
+              const currentSliderValue = sliderValues[tab.id] !== undefined ? sliderValues[tab.id] : 100;
+              return (
+                <ListItem
+                  key={tab.id}
+                  className="list-item"
+                  disablePadding
+                  style={{
+                    flexDirection: "column",
+                    alignItems: "flex-start",
+                  }}
+                >
+                  <Box display="flex" width="100%" alignItems="center">
+                    <ListItemAvatar style={{ minWidth: 35 }}>
+                      <Avatar
+                        sx={{ width: 35, height: 35, margin: "0 0 22px 10px" }}
+                        variant="square"
+                        src={tab.favIconUrl || "default-icon.png"}
+                      />
+                    </ListItemAvatar>
+                    <Box
+                      width="100%"
+                      sx={{
+                        minWidth: 0,
+                        overflow: "hidden",
+                        textOverflow: "ellipsis",
+                        whiteSpace: "nowrap",
+                        padding: "0px 25px 15px 25px",
                       }}
-                      primary={tab.title || tab.url}
-                    />
-                    <Slider
-                      value={currentSliderValue}
-                      valueLabelDisplay="auto"
-                      step={1}
-                      min={0}
-                      max={100}
-                      onChange={(event, value) => {
-                        // Update live slider state.
-                        setSliderValues((prev) => ({ ...prev, [tab.id]: value }));
-                        handleVolumeLiveChange(tab.id, value);
-                      }}
-                      onChangeCommitted={(event, value) => handleVolumeCommitChange(tab.id, value)}
-                    />
+                    >
+                      <ListItemText
+                        primaryTypographyProps={{
+                          style: {
+                            fontSize: "0.9rem",
+                            overflow: "hidden",
+                            textOverflow: "ellipsis",
+                            whiteSpace: "nowrap",
+                            display: "block",
+                          },
+                        }}
+                        primary={tab.title || tab.url}
+                      />
+                      <Slider
+                        value={currentSliderValue}
+                        valueLabelDisplay="auto"
+                        step={1}
+                        min={0}
+                        max={100}
+                        onChange={(event, value) => {
+                          // Update live slider state.
+                          setSliderValues((prev) => ({ ...prev, [tab.id]: value }));
+                          handleVolumeLiveChange(tab.id, value);
+                        }}
+                        onChangeCommitted={(event, value) => handleVolumeCommitChange(tab.id, value)}
+                      />
+                    </Box>
                   </Box>
-                </Box>
-              </ListItem>
-            );
-          })}
-        </List>
-      </div>
+                </ListItem>
+              );
+            })}
+          </List>
+        </div>
+      )}
     </>
   );
 }
