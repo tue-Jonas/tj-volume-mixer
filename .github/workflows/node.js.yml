@@ -32,9 +32,10 @@ jobs:
 
       # Publish the extension to the Chrome Web Store
       - name: Upload to Chrome Web Store
+        if: github.event_name == 'push' # prevent publishing on pull request test run
         uses: mobilefirstllc/cws-publish@latest
         with:
-          action: 'upload'  # one of: upload, publish, testers
+          action: 'upload' # one of: upload, publish, testers
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
           refresh_token: ${{ secrets.REFRESH_TOKEN }}
