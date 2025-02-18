@@ -1,6 +1,6 @@
 // src/Popup.jsx
 import React, { useEffect, useState } from "react";
-import { Slider, List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box } from "@mui/material";
+import { Slider, List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box, Tooltip } from "@mui/material";
 import "./popup.css";
 import Header from "./Header";
 
@@ -101,6 +101,15 @@ export default function Popup() {
     console.log(`Volume committed for tab ${tabId}`);
   };
 
+  function ValueLabelComponent(props) {
+    const { children, value, open } = props;
+    return (
+      <Tooltip open={open} enterTouchDelay={0} placement="top" title={value}>
+        {children}
+      </Tooltip>
+    );
+  }
+  
   return (
     <>
       <Header />
@@ -162,6 +171,9 @@ export default function Popup() {
                       <Slider
                         value={currentSliderValue}
                         valueLabelDisplay="auto"
+                        slots={{
+                          valueLabel: ValueLabelComponent,
+                        }}
                         step={1}
                         min={0}
                         max={100}
