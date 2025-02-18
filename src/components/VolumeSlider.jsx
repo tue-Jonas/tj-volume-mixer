@@ -16,7 +16,7 @@ const VolumeSlider = React.memo(({ tabId, initialValue, isMuted, onLiveChange, o
   };
 
   return (
-    <div style={{ display: "flex", alignItems: "center" }}>
+    <div style={{ display: "flex", alignItems: "center", gap: "15px" }}>
       <Slider
         value={localValue}
         valueLabelDisplay="auto"
@@ -27,7 +27,9 @@ const VolumeSlider = React.memo(({ tabId, initialValue, isMuted, onLiveChange, o
         onChangeCommitted={handleChangeCommitted}
         style={{ flex: 1 }}
       />
-      <IconButton onClick={() => onToggleMute(tabId)}>{isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}</IconButton>
+      <IconButton color="primary.light" onClick={() => onToggleMute(tabId)}>
+        {isMuted ? <VolumeOffIcon /> : <VolumeUpIcon />}
+      </IconButton>
     </div>
   );
 });

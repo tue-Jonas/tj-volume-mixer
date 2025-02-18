@@ -146,7 +146,7 @@ export default function Popup() {
                       overflow: "hidden",
                       textOverflow: "ellipsis",
                       whiteSpace: "nowrap",
-                      padding: "0px 25px 15px 25px",
+                      padding: "0px 0px 15px 25px",
                     }}
                   >
                     <ListItemText
