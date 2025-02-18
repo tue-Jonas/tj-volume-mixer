@@ -31,11 +31,12 @@ jobs:
         run: zip -r extension.zip build
 
       # Publish the extension to the Chrome Web Store
-      - name: Publish to Chrome Web Store
-        uses: nwtgck/actions-chrome-webstore@v1
+      - name: Upload to Chrome Web Store
+        uses: mobilefirstllc/cws-publish@latest
         with:
-          client_id: ${{ secrets.CHROME_WEBSTORE_CLIENT_ID }}
-          client_secret: ${{ secrets.CHROME_WEBSTORE_CLIENT_SECRET }}
-          refresh_token: ${{ secrets.CHROME_WEBSTORE_REFRESH_TOKEN }}
-          extension_id: ${{ secrets.CHROME_WEBSTORE_EXTENSION_ID }}
+          action: 'upload'  # one of: upload, publish, testers
+          client_id: ${{ secrets.CLIENT_ID }}
+          client_secret: ${{ secrets.CLIENT_SECRET }}
+          refresh_token: ${{ secrets.REFRESH_TOKEN }}
+          extension_id: ${{ secrets.EXTENSION_ID }} 
           zip_file: extension.zip
