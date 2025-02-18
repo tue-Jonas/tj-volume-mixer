@@ -1,17 +1,17 @@
-// src/Popup.jsx
 import React, { useEffect, useState } from "react";
-import { Slider, List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box } from "@mui/material";
+import { List, ListItem, ListItemAvatar, Avatar, ListItemText, Typography, Box } from "@mui/material";
 import "./popup.css";
 import Header from "./Header";
+import VolumeSlider from "./components/VolumeSlider";
 
 export default function Popup() {
   const [tabs, setTabs] = useState([]);
   // volumes holds persisted values (scale 0 to 1)
   const [volumes, setVolumes] = useState({});
-  // sliderValues holds the live slider value (scale 0 to 100)
-  const [sliderValues, setSliderValues] = useState({});
+  // muteStates holds mute state for each tab
+  const [muteStates, setMuteStates] = useState({});
 
-  // Load saved volume settings when component mounts.
+  // Load saved volume settings.
   useEffect(() => {
     chrome.storage.local.get("volumes", (result) => {
       if (result.volumes) {
@@ -20,7 +20,7 @@ export default function Popup() {
     });
   }, []);
 
-  // Query tabs and check for media; initialize sliderValues for each tab.
+  // Query tabs and check for media; initialize slider values and mute states.
   useEffect(() => {
     chrome.tabs.query({}, (allTabs) => {
       const promises = allTabs.map((tab) => {
@@ -49,7 +49,6 @@ export default function Popup() {
                   resolve({ tab, hasMedia: false });
                 } else {
                   let hasMedia = results[0].result;
-                  // Fallback: if URL contains "twitch.tv", assume it has media.
                   if (!hasMedia && tab.url && tab.url.includes("twitch.tv")) {
                     hasMedia = true;
                   }
@@ -64,13 +63,12 @@ export default function Popup() {
       Promise.all(promises).then((results) => {
         const mediaTabs = results.filter((item) => item.hasMedia).map((item) => item.tab);
         setTabs(mediaTabs);
-        // Initialize sliderValues: if there's a persisted volume, use that (converted to 0-100),
-        // otherwise default to 100.
-        const initialValues = {};
+        // Initialize muteStates based on current tab muted info.
+        const initialMuteStates = {};
         mediaTabs.forEach((tab) => {
-          initialValues[tab.id] = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+          initialMuteStates[tab.id] = tab.mutedInfo ? tab.mutedInfo.muted : false;
         });
-        setSliderValues(initialValues);
+        setMuteStates(initialMuteStates);
       });
     });
   }, [volumes]);
@@ -90,7 +88,6 @@ export default function Popup() {
     );
   };
 
-  // Commit change: update state and persist the value.
   const handleVolumeCommitChange = (tabId, value) => {
     const volume = value / 100;
     setVolumes((prev) => {
@@ -101,84 +98,94 @@ export default function Popup() {
     console.log(`Volume committed for tab ${tabId}`);
   };
 
+  // Toggle mute state for a given tab.
+  const handleToggleMute = (tabId) => {
+    const currentMute = muteStates[tabId] || false;
+    const newMute = !currentMute;
+    chrome.tabs.update(tabId, { muted: newMute }, () => {
+      setMuteStates((prev) => ({ ...prev, [tabId]: newMute }));
+      console.log(`Mute toggled for tab ${tabId}: ${newMute}`);
+    });
+  };
+
+  const TabList = () => {
+    return (
+      <div className="list-container">
+        <List
+          disablePadding
+          style={{
+            display: "flex",
+            flexDirection: "column",
+            gap: "10px",
+          }}
+        >
+          {tabs.map((tab) => {
+            const currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+            return (
+              <ListItem
+                key={tab.id}
+                className="list-item"
+                disablePadding
+                style={{
+                  flexDirection: "column",
+                  alignItems: "flex-start",
+                }}
+              >
+                <Box display="flex" width="100%" alignItems="center">
+                  <ListItemAvatar style={{ minWidth: 35 }}>
+                    <Avatar
+                      sx={{ width: 35, height: 35, margin: "0 0 22px 10px" }}
+                      variant="square"
+                      src={tab.favIconUrl || "default-icon.png"}
+                    />
+                  </ListItemAvatar>
+                  <Box
+                    width="100%"
+                    sx={{
+                      minWidth: 0,
+                      overflow: "hidden",
+                      textOverflow: "ellipsis",
+                      whiteSpace: "nowrap",
+                      padding: "0px 0px 15px 25px",
+                    }}
+                  >
+                    <ListItemText
+                      primaryTypographyProps={{
+                        style: {
+                          fontSize: "0.9rem",
+                          overflow: "hidden",
+                          textOverflow: "ellipsis",
+                          whiteSpace: "nowrap",
+                          display: "block",
+                        },
+                      }}
+                      primary={tab.title || tab.url}
+                    />
+                    <VolumeSlider
+                      tabId={tab.id}
+                      initialValue={currentVolume}
+                      isMuted={muteStates[tab.id]}
+                      onLiveChange={handleVolumeLiveChange}
+                      onCommitChange={handleVolumeCommitChange}
+                      onToggleMute={handleToggleMute}
+                    />
+                  </Box>
+                </Box>
+              </ListItem>
+            );
+          })}
+        </List>
+      </div>
+    );
+  };
+
   return (
     <>
       <Header />
       {tabs.length === 0 ? (
         <Typography style={{ textAlign: "center" }}>No tab is playing audio.</Typography>
       ) : (
-        <div className="list-container">
-          <List
-            disablePadding
-            style={{
-              display: "flex",
-              flexDirection: "column",
-              gap: "10px",
-            }}
-          >
-            {tabs.map((tab) => {
-              // Get the live slider value, defaulting to 100 if not set.
-              const currentSliderValue = sliderValues[tab.id] !== undefined ? sliderValues[tab.id] : 100;
-              return (
-                <ListItem
-                  key={tab.id}
-                  className="list-item"
-                  disablePadding
-                  style={{
-                    flexDirection: "column",
-                    alignItems: "flex-start",
-                  }}
-                >
-                  <Box display="flex" width="100%" alignItems="center">
-                    <ListItemAvatar style={{ minWidth: 35 }}>
-                      <Avatar
-                        sx={{ width: 35, height: 35, margin: "0 0 22px 10px" }}
-                        variant="square"
-                        src={tab.favIconUrl || "default-icon.png"}
-                      />
-                    </ListItemAvatar>
-                    <Box
-                      width="100%"
-                      sx={{
-                        minWidth: 0,
-                        overflow: "hidden",
-                        textOverflow: "ellipsis",
-                        whiteSpace: "nowrap",
-                        padding: "0px 25px 15px 25px",
-                      }}
-                    >
-                      <ListItemText
-                        primaryTypographyProps={{
-                          style: {
-                            fontSize: "0.9rem",
-                            overflow: "hidden",
-                            textOverflow: "ellipsis",
-                            whiteSpace: "nowrap",
-                            display: "block",
-                          },
-                        }}
-                        primary={tab.title || tab.url}
-                      />
-                      <Slider
-                        value={currentSliderValue}
-                        valueLabelDisplay="auto"
-                        step={1}
-                        min={0}
-                        max={100}
-                        onChange={(event, value) => {
-                          // Update live slider state.
-                          setSliderValues((prev) => ({ ...prev, [tab.id]: value }));
-                          handleVolumeLiveChange(tab.id, value);
-                        }}
-                        onChangeCommitted={(event, value) => handleVolumeCommitChange(tab.id, value)}
-                      />
-                    </Box>
-                  </Box>
-                </ListItem>
-              );
-            })}
-          </List>
-        </div>
+        <TabList />
       )}
     </>
   );
