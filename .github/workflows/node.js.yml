@@ -44,7 +44,7 @@ jobs:
       - name: Upload build zip file
         uses: actions/upload-artifact@v4
         with:
-          name: extension-build
+          name: ${{ steps.package.outputs.zip_file }}
           path: ${{ steps.package.outputs.zip_file }}
           retention-days: 1
 
