@@ -2,9 +2,9 @@ name: Build and publish to Chrome Webstore
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main", "prerelease"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main", "prerelease"]
 
 jobs:
   build:
@@ -21,23 +21,40 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
 
       - run: npm ci
       - run: npm run build --if-present
 
-      # Package the build output into a zip file
-      - name: Package extension
-        run: zip -r extension.zip build
+      # Set the current date in an environment variable.
+      - name: Get current date
+        id: current-date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-      # Publish the extension to the Chrome Web Store
+      # Upload the build folder as an artifact.
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: tj-volume-mixer_${{ env.CURRENT_DATE }}
+          path: build/
+          retention-days: 1
+
+      # Package the build folder into a zip file for publishing.
+      - name: Package extension for publish
+        id: package
+        run: |
+          ZIP_FILE="${{ env.CURRENT_DATE }}_tj-volume-mixer.zip"
+          zip -r "$ZIP_FILE" build/
+          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
+
+      # Publish to the Chrome Web Store (only on push to main).
       - name: Upload to Chrome Web Store
-        if: github.event_name == 'push' # prevent publishing on pull request test run
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: mobilefirstllc/cws-publish@latest
         with:
-          action: 'upload' # one of: upload, publish, testers
+          action: "upload" # Change to "publish" if desired
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
           refresh_token: ${{ secrets.REFRESH_TOKEN }}
-          extension_id: ${{ secrets.EXTENSION_ID }} 
-          zip_file: extension.zip
+          extension_id: ${{ secrets.EXTENSION_ID }}
+          zip_file: ${{ steps.package.outputs.zip_file }}
