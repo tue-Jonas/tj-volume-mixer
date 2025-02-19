@@ -2,9 +2,9 @@ name: Build and publish to Chrome Webstore
 
 on:
   push:
-    branches: [ "main" ]
+    branches: ["main", "prerelease"]
   pull_request:
-    branches: [ "main" ]
+    branches: ["main", "prerelease"]
 
 jobs:
   build:
@@ -21,7 +21,7 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: ${{ matrix.node-version }}
-          cache: 'npm'
+          cache: "npm"
 
       - run: npm ci
       - run: npm run build --if-present
@@ -30,14 +30,22 @@ jobs:
       - name: Package extension
         run: zip -r extension.zip build
 
+      # Upload the zip file as an artifact (available for 1 day)
+      - name: Upload build zip file
+        uses: actions/upload-artifact@v4
+        with:
+          name: extension-build
+          path: extension.zip
+          retention-days: 1
+
       # Publish the extension to the Chrome Web Store
       - name: Upload to Chrome Web Store
-        if: github.event_name == 'push' # prevent publishing on pull request test run
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # only publish on push to main branch
         uses: mobilefirstllc/cws-publish@latest
         with:
-          action: 'upload' # one of: upload, publish, testers
+          action: "upload" # one of: upload, publish, testers
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
           refresh_token: ${{ secrets.REFRESH_TOKEN }}
-          extension_id: ${{ secrets.EXTENSION_ID }} 
+          extension_id: ${{ secrets.EXTENSION_ID }}
           zip_file: extension.zip
