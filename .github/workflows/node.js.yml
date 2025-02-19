@@ -33,18 +33,13 @@ jobs:
           mkdir -p artifacts
           ZIP_FILE="$(date +'%Y-%m-%d')_tj-volume-mixer.zip"
           cd build && zip -r "../artifacts/${ZIP_FILE}" . && cd ..
-          # Output the full path so later steps can find the file.
           echo "zip_file=artifacts/${ZIP_FILE}" >> $GITHUB_OUTPUT
+          echo "artifact_name=${ZIP_FILE}" >> $GITHUB_OUTPUT
 
-      # Debug: List the contents of the artifacts folder.
-      - name: List artifacts folder
-        run: ls -al artifacts
-
-      # Upload the zip file as an artifact.
       - name: Upload build zip file
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.package.outputs.zip_file }}
+          name: ${{ steps.package.outputs.artifact_name }}
           path: ${{ steps.package.outputs.zip_file }}
           retention-days: 1
 
