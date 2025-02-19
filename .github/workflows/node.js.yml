@@ -26,29 +26,33 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
 
-      # Package the build output into a zip file with a date-based name.
-      - name: Package extension
-        id: package
-        run: |
-          mkdir -p artifacts
-          ZIP_FILE="$(date +'%Y-%m-%d')_tj-volume-mixer.zip"
-          cd build && zip -r "../artifacts/${ZIP_FILE}" . && cd ..
-          echo "zip_file=artifacts/${ZIP_FILE}" >> $GITHUB_OUTPUT
-          echo "artifact_name=${ZIP_FILE}" >> $GITHUB_OUTPUT
+      # Set the current date in an environment variable.
+      - name: Get current date
+        id: current-date
+        run: echo "CURRENT_DATE=$(date +'%Y-%m-%d')" >> $GITHUB_ENV
 
-      - name: Upload build zip file
+      # Upload the build folder as an artifact.
+      - name: Upload Artifact
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.package.outputs.artifact_name }}
-          path: ${{ steps.package.outputs.zip_file }}
+          name: tj-volume-mixer_${{ env.CURRENT_DATE }}
+          path: build/
           retention-days: 1
 
-      # Publish the extension to the Chrome Web Store (only on push to main).
+      # Package the build folder into a zip file for publishing.
+      - name: Package extension for publish
+        id: package
+        run: |
+          ZIP_FILE="${{ env.CURRENT_DATE }}_tj-volume-mixer.zip"
+          zip -r "$ZIP_FILE" build/
+          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
+
+      # Publish to the Chrome Web Store (only on push to main).
       - name: Upload to Chrome Web Store
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: mobilefirstllc/cws-publish@latest
         with:
-          action: "upload" # or "publish" if you prefer
+          action: "upload" # Change to "publish" if desired
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
           refresh_token: ${{ secrets.REFRESH_TOKEN }}
