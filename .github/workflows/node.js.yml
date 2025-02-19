@@ -32,7 +32,7 @@ jobs:
         run: |
           ZIP_FILE="$(date +'%Y-%m-%d')_tj-volume-mixer"
           cd build && zip -r "../$ZIP_FILE" . && cd ..
-          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
+          echo "zip_file=$(ZIP_FILE).zip" >> $GITHUB_OUTPUT
 
       # Upload the zip file as an artifact (retained for 1 day)
       - name: Upload build zip file
