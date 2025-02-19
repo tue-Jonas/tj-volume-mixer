@@ -26,26 +26,30 @@ jobs:
       - run: npm ci
       - run: npm run build --if-present
 
-      # Package the build output into a zip file
+      # Package the build output into a zip file with a date-based name.
       - name: Package extension
-        run: zip -r extension.zip build
+        id: package
+        run: |
+          ZIP_FILE="$(date +'%Y-%m-%d')_tj-volume-mixer.zip"
+          zip -r "$ZIP_FILE" build
+          echo "zip_file=$ZIP_FILE" >> $GITHUB_OUTPUT
 
-      # Upload the zip file as an artifact (available for 1 day)
+      # Upload the zip file as an artifact (retained for 1 day)
       - name: Upload build zip file
         uses: actions/upload-artifact@v4
         with:
-          name: extension-build
-          path: extension.zip
+          name: ${{ steps.package.outputs.zip_file }}
+          path: ${{ steps.package.outputs.zip_file }}
           retention-days: 1
 
       # Publish the extension to the Chrome Web Store
       - name: Upload to Chrome Web Store
-        if: github.event_name == 'push' && github.ref == 'refs/heads/main' # only publish on push to main branch
+        if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: mobilefirstllc/cws-publish@latest
         with:
-          action: "upload" # one of: upload, publish, testers
+          action: "upload" # or "publish", "testers" as needed
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
           refresh_token: ${{ secrets.REFRESH_TOKEN }}
           extension_id: ${{ secrets.EXTENSION_ID }}
-          zip_file: extension.zip
+          zip_file: ${{ steps.package.outputs.zip_file }}
