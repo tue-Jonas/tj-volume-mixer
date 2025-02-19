@@ -30,16 +30,16 @@ jobs:
       - name: Package extension
         id: package
         run: |
-          BASE_NAME="$(date +'%Y-%m-%d')_tj-volume-mixer"
-          FINAL_ZIP_FILE="${BASE_NAME}"
-          cd build && zip -r "../${FINAL_ZIP_FILE}" . && cd ..
-          echo "zip_file=${BASE_NAME}.zip" >> $GITHUB_OUTPUT
+          mkdir -p artifacts
+          ZIP_FILE="$(date +'%Y-%m-%d')_tj-volume-mixer.zip"
+          cd build && zip -r "../artifacts/${ZIP_FILE}" . && cd ..
+          echo "zip_file=${ZIP_FILE}" >> $GITHUB_OUTPUT
 
       # Upload the zip file as an artifact (retained for 1 day)
       - name: Upload build zip file
         uses: actions/upload-artifact@v4
         with:
-          name: ${{ steps.package.outputs.zip_file }}
+          name: tj-volume-mixer-build
           path: ${{ steps.package.outputs.zip_file }}
           retention-days: 1
 
