@@ -40,7 +40,7 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: tj-volume-mixer-build
-          path: ${{ steps.package.outputs.zip_file }}
+          path: artifacts/${{ steps.package.outputs.zip_file }}
           retention-days: 1
 
       # Publish the extension to the Chrome Web Store
