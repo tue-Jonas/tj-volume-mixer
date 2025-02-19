@@ -33,22 +33,27 @@ jobs:
           mkdir -p artifacts
           ZIP_FILE="$(date +'%Y-%m-%d')_tj-volume-mixer.zip"
           cd build && zip -r "../artifacts/${ZIP_FILE}" . && cd ..
-          echo "zip_file=${ZIP_FILE}" >> $GITHUB_OUTPUT
+          # Output the full path so later steps can find the file.
+          echo "zip_file=artifacts/${ZIP_FILE}" >> $GITHUB_OUTPUT
 
-      # Upload the zip file as an artifact (retained for 1 day)
+      # Debug: List the contents of the artifacts folder.
+      - name: List artifacts folder
+        run: ls -al artifacts
+
+      # Upload the zip file as an artifact.
       - name: Upload build zip file
         uses: actions/upload-artifact@v4
         with:
-          name: tj-volume-mixer-build
-          path: artifacts/${{ steps.package.outputs.zip_file }}
+          name: extension-build
+          path: ${{ steps.package.outputs.zip_file }}
           retention-days: 1
 
-      # Publish the extension to the Chrome Web Store
+      # Publish the extension to the Chrome Web Store (only on push to main).
       - name: Upload to Chrome Web Store
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
         uses: mobilefirstllc/cws-publish@latest
         with:
-          action: "upload" # or "publish", "testers" as needed
+          action: "upload" # or "publish" if you prefer
           client_id: ${{ secrets.CLIENT_ID }}
           client_secret: ${{ secrets.CLIENT_SECRET }}
           refresh_token: ${{ secrets.REFRESH_TOKEN }}
