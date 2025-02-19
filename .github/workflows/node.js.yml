@@ -31,9 +31,9 @@ jobs:
         id: package
         run: |
           BASE_NAME="$(date +'%Y-%m-%d')_tj-volume-mixer"
-          FINAL_ZIP_FILE="${BASE_NAME}.zip"
+          FINAL_ZIP_FILE="${BASE_NAME}"
           cd build && zip -r "../${FINAL_ZIP_FILE}" . && cd ..
-          echo "zip_file=${FINAL_ZIP_FILE}" >> $GITHUB_OUTPUT
+          echo "zip_file=${BASE_NAME}.zip" >> $GITHUB_OUTPUT
 
       # Upload the zip file as an artifact (retained for 1 day)
       - name: Upload build zip file
