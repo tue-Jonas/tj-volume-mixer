@@ -4,10 +4,33 @@ const VOLUME_CHANGE_THRESHOLD = 0.01; // Threshold for detecting meaningful volu
 const VOLUME_SAVE_DEBOUNCE_MS = 500; // Debounce time for saving volume changes
 
 let currentTabId = null;
-let currentUrl = window.location.origin; // Use origin (protocol + domain) as persistent key
+let currentUrl = getCurrentUrl(); // Use origin (protocol + domain) as persistent key
 let savedVolume = 1.0; // Default volume (scale 0 to 1)
 let isApplyingVolume = false; // Flag to prevent recursive updates
 let volumeSaveTimeout = null; // Timeout for debouncing volume saves
+
+// Get current URL origin for storage key (only for http(s) URLs)
+function getCurrentUrl() {
+  try {
+    const url = new URL(window.location.href);
+    if (url.protocol === 'http:' || url.protocol === 'https:') {
+      return url.origin;
+    }
+  } catch (e) {
+    console.warn('[TJ Volume Mixer] Failed to get current URL:', e);
+  }
+  return null;
+}
+
+// Update currentUrl when the page navigates (for SPAs)
+function updateCurrentUrl() {
+  const newUrl = getCurrentUrl();
+  if (newUrl && newUrl !== currentUrl) {
+    currentUrl = newUrl;
+    console.log(`[TJ Volume Mixer] URL changed to: ${currentUrl}`);
+    loadVolumeSettings(); // Reload volume settings for new URL
+  }
+}
 
 // Get the current tab ID
 chrome.runtime.sendMessage({ action: "getTabId" }, (response) => {
@@ -24,12 +47,12 @@ function loadVolumeSettings() {
   // Check both URL-based and tab-based storage for backwards compatibility
   chrome.storage.local.get("volumes", (result) => {
     if (result.volumes) {
-      // Prefer URL-based storage for persistence across sessions
-      if (result.volumes[currentUrl] !== undefined) {
+      // Prefer URL-based storage for persistence across sessions (only for http(s))
+      if (currentUrl && result.volumes[currentUrl] !== undefined) {
         savedVolume = result.volumes[currentUrl];
         console.log(`[TJ Volume Mixer] Loaded saved volume for URL ${currentUrl}: ${savedVolume}`);
       } else if (result.volumes[currentTabId] !== undefined) {
-        // Fall back to tab-based for current session
+        // Fall back to tab-based for current session or non-http(s) pages
         savedVolume = result.volumes[currentTabId];
         console.log(`[TJ Volume Mixer] Loaded saved volume for tab ${currentTabId}: ${savedVolume}`);
       }
@@ -43,8 +66,8 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   if (areaName === "local" && changes.volumes) {
     const newVolumes = changes.volumes.newValue;
     if (newVolumes) {
-      // Check URL-based storage first, then tab-based
-      if (newVolumes[currentUrl] !== undefined) {
+      // Check URL-based storage first (only for http(s)), then tab-based
+      if (currentUrl && newVolumes[currentUrl] !== undefined) {
         savedVolume = newVolumes[currentUrl];
         console.log(`[TJ Volume Mixer] Volume updated for URL ${currentUrl}: ${savedVolume}`);
         applyVolumeToAllMedia();
@@ -104,7 +127,9 @@ function handleVolumeChange(event) {
         // Save to storage with both URL and tabId
         chrome.storage.local.get("volumes", (result) => {
           const volumes = result.volumes || {};
-          volumes[currentUrl] = newVolume; // Persist by URL
+          if (currentUrl) {
+            volumes[currentUrl] = newVolume; // Persist by URL (only for http(s))
+          }
           if (currentTabId) {
             volumes[currentTabId] = newVolume; // Also update tab-based for current session
           }
@@ -170,5 +195,37 @@ document.addEventListener("canplay", (event) => {
     console.log(`[TJ Volume Mixer] Media canplay event, applied volume: ${savedVolume}`);
   }
 }, true);
+
+// Monitor for URL changes in SPAs (using MutationObserver on document.title and popstate events)
+let lastUrl = window.location.href;
+const urlObserver = new MutationObserver(() => {
+  const currentHref = window.location.href;
+  if (currentHref !== lastUrl) {
+    lastUrl = currentHref;
+    updateCurrentUrl();
+  }
+});
+
+urlObserver.observe(document.querySelector('title') || document.documentElement, {
+  childList: true,
+  subtree: true
+});
+
+// Also listen for popstate events (back/forward navigation)
+window.addEventListener('popstate', updateCurrentUrl);
+
+// And pushState/replaceState for SPA navigation
+const originalPushState = history.pushState;
+const originalReplaceState = history.replaceState;
+
+history.pushState = function(...args) {
+  originalPushState.apply(this, args);
+  updateCurrentUrl();
+};
+
+history.replaceState = function(...args) {
+  originalReplaceState.apply(this, args);
+  updateCurrentUrl();
+};
 
 console.log("[TJ Volume Mixer] Content script loaded and monitoring for media elements");

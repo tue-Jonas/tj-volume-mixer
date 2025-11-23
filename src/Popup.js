@@ -155,11 +155,23 @@ export default function Popup() {
             // Check both URL-based and tab-based storage, preferring URL-based
             let currentVolume = 100;
             try {
-              const urlKey = tab.url ? new URL(tab.url).origin : null;
-              if (urlKey && volumes[urlKey] !== undefined) {
-                currentVolume = volumes[urlKey] * 100;
-              } else if (volumes[tab.id] !== undefined) {
-                currentVolume = volumes[tab.id] * 100;
+              if (tab.url) {
+                const url = new URL(tab.url);
+                // Only use URL-based storage for http(s) URLs
+                if (url.protocol === 'http:' || url.protocol === 'https:') {
+                  const urlKey = url.origin;
+                  if (volumes[urlKey] !== undefined) {
+                    currentVolume = volumes[urlKey] * 100;
+                  } else if (volumes[tab.id] !== undefined) {
+                    currentVolume = volumes[tab.id] * 100;
+                  }
+                } else {
+                  // For non-http(s) URLs, only use tab-based storage
+                  currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+                }
+              } else {
+                // No URL, use tab-based only
+                currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
               }
             } catch (e) {
               // Fallback to tab-based if URL parsing fails
