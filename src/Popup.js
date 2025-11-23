@@ -90,12 +90,22 @@ export default function Popup() {
 
   const handleVolumeCommitChange = (tabId, value) => {
     const volume = value / 100;
-    setVolumes((prev) => {
-      const newVolumes = { ...prev, [tabId]: volume };
-      chrome.storage.local.set({ volumes: newVolumes });
-      return newVolumes;
+    
+    // Get the tab's URL to use as persistent key
+    chrome.tabs.get(tabId, (tab) => {
+      if (tab && tab.url) {
+        const urlKey = new URL(tab.url).origin;
+        
+        setVolumes((prev) => {
+          const newVolumes = { ...prev };
+          newVolumes[tabId] = volume; // Keep tab-based for current session
+          newVolumes[urlKey] = volume; // Add URL-based for persistence
+          chrome.storage.local.set({ volumes: newVolumes });
+          return newVolumes;
+        });
+        console.log(`Volume committed for tab ${tabId} and URL ${urlKey}`);
+      }
     });
-    console.log(`Volume committed for tab ${tabId}`);
   };
 
   // Toggle mute state for a given tab.
@@ -120,7 +130,19 @@ export default function Popup() {
           }}
         >
           {tabs.map((tab) => {
-            const currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+            // Check both URL-based and tab-based storage, preferring URL-based
+            let currentVolume = 100;
+            try {
+              const urlKey = tab.url ? new URL(tab.url).origin : null;
+              if (urlKey && volumes[urlKey] !== undefined) {
+                currentVolume = volumes[urlKey] * 100;
+              } else if (volumes[tab.id] !== undefined) {
+                currentVolume = volumes[tab.id] * 100;
+              }
+            } catch (e) {
+              // Fallback to tab-based if URL parsing fails
+              currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+            }
             return (
               <ListItem
                 key={tab.id}
