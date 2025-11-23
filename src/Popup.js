@@ -94,16 +94,38 @@ export default function Popup() {
     // Get the tab's URL to use as persistent key
     chrome.tabs.get(tabId, (tab) => {
       if (tab && tab.url) {
-        const urlKey = new URL(tab.url).origin;
-        
-        setVolumes((prev) => {
-          const newVolumes = { ...prev };
-          newVolumes[tabId] = volume; // Keep tab-based for current session
-          newVolumes[urlKey] = volume; // Add URL-based for persistence
-          chrome.storage.local.set({ volumes: newVolumes });
-          return newVolumes;
-        });
-        console.log(`Volume committed for tab ${tabId} and URL ${urlKey}`);
+        try {
+          // Only use origin for http(s) URLs, skip chrome://, about:, etc.
+          const url = new URL(tab.url);
+          if (url.protocol === 'http:' || url.protocol === 'https:') {
+            const urlKey = url.origin;
+            
+            setVolumes((prev) => {
+              const newVolumes = { ...prev };
+              newVolumes[tabId] = volume; // Keep tab-based for current session
+              newVolumes[urlKey] = volume; // Add URL-based for persistence
+              chrome.storage.local.set({ volumes: newVolumes });
+              return newVolumes;
+            });
+            console.log(`Volume committed for tab ${tabId} and URL ${urlKey}`);
+          } else {
+            // For non-http(s) URLs, only save by tab ID
+            setVolumes((prev) => {
+              const newVolumes = { ...prev, [tabId]: volume };
+              chrome.storage.local.set({ volumes: newVolumes });
+              return newVolumes;
+            });
+            console.log(`Volume committed for tab ${tabId} (non-http URL)`);
+          }
+        } catch (e) {
+          // Fallback to tab-based only if URL parsing fails
+          console.error(`Failed to parse URL: ${e.message}`);
+          setVolumes((prev) => {
+            const newVolumes = { ...prev, [tabId]: volume };
+            chrome.storage.local.set({ volumes: newVolumes });
+            return newVolumes;
+          });
+        }
       }
     });
   };

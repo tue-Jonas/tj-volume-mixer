@@ -1,9 +1,13 @@
 // Content script that monitors for new media elements and applies saved volume
 
+const VOLUME_CHANGE_THRESHOLD = 0.01; // Threshold for detecting meaningful volume changes
+const VOLUME_SAVE_DEBOUNCE_MS = 500; // Debounce time for saving volume changes
+
 let currentTabId = null;
 let currentUrl = window.location.origin; // Use origin (protocol + domain) as persistent key
 let savedVolume = 1.0; // Default volume (scale 0 to 1)
 let isApplyingVolume = false; // Flag to prevent recursive updates
+let volumeSaveTimeout = null; // Timeout for debouncing volume saves
 
 // Get the current tab ID
 chrome.runtime.sendMessage({ action: "getTabId" }, (response) => {
@@ -87,19 +91,26 @@ function handleVolumeChange(event) {
     const newVolume = element.volume;
     
     // Only update if volume actually changed
-    if (Math.abs(newVolume - savedVolume) > 0.01) {
+    if (Math.abs(newVolume - savedVolume) > VOLUME_CHANGE_THRESHOLD) {
       savedVolume = newVolume;
       console.log(`[TJ Volume Mixer] Detected volume change on media element: ${newVolume}`);
       
-      // Save to storage with both URL and tabId
-      chrome.storage.local.get("volumes", (result) => {
-        const volumes = result.volumes || {};
-        volumes[currentUrl] = newVolume; // Persist by URL
-        if (currentTabId) {
-          volumes[currentTabId] = newVolume; // Also update tab-based for current session
-        }
-        chrome.storage.local.set({ volumes: volumes });
-      });
+      // Debounce storage updates to avoid race conditions
+      if (volumeSaveTimeout) {
+        clearTimeout(volumeSaveTimeout);
+      }
+      
+      volumeSaveTimeout = setTimeout(() => {
+        // Save to storage with both URL and tabId
+        chrome.storage.local.get("volumes", (result) => {
+          const volumes = result.volumes || {};
+          volumes[currentUrl] = newVolume; // Persist by URL
+          if (currentTabId) {
+            volumes[currentTabId] = newVolume; // Also update tab-based for current session
+          }
+          chrome.storage.local.set({ volumes: volumes });
+        });
+      }, VOLUME_SAVE_DEBOUNCE_MS);
     }
   }
 }
