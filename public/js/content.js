@@ -36,28 +36,35 @@ chrome.storage.onChanged.addListener((changes, areaName) => {
   }
 });
 
+// Helper function to check if element is a media element
+function isMediaElement(element) {
+  return element && (element.tagName === "AUDIO" || element.tagName === "VIDEO");
+}
+
+// Apply saved volume to a specific media element
+function applyVolumeToElement(element) {
+  if (element.volume !== savedVolume) {
+    element.volume = savedVolume;
+    console.log(`[TJ Volume Mixer] Applied volume ${savedVolume} to media element`);
+  }
+}
+
 // Apply saved volume to all media elements
 function applyVolumeToAllMedia() {
   const mediaElements = document.querySelectorAll("audio, video");
   mediaElements.forEach((el) => {
-    if (el.volume !== savedVolume) {
-      el.volume = savedVolume;
-      console.log(`[TJ Volume Mixer] Applied volume ${savedVolume} to media element`);
-    }
+    applyVolumeToElement(el);
   });
 }
 
 // Monitor for new media elements using MutationObserver
 const observer = new MutationObserver((mutations) => {
-  let newMediaFound = false;
-  
   mutations.forEach((mutation) => {
     mutation.addedNodes.forEach((node) => {
       // Check if the added node is a media element
       if (node.nodeType === Node.ELEMENT_NODE) {
-        if (node.tagName === "AUDIO" || node.tagName === "VIDEO") {
-          node.volume = savedVolume;
-          newMediaFound = true;
+        if (isMediaElement(node)) {
+          applyVolumeToElement(node);
           console.log(`[TJ Volume Mixer] New media element detected, applied volume: ${savedVolume}`);
         }
         
@@ -65,19 +72,13 @@ const observer = new MutationObserver((mutations) => {
         const mediaChildren = node.querySelectorAll("audio, video");
         if (mediaChildren.length > 0) {
           mediaChildren.forEach((el) => {
-            el.volume = savedVolume;
+            applyVolumeToElement(el);
           });
-          newMediaFound = true;
           console.log(`[TJ Volume Mixer] New media elements detected in subtree, applied volume: ${savedVolume}`);
         }
       }
     });
   });
-  
-  // Also check for media elements that might have been modified
-  if (!newMediaFound) {
-    applyVolumeToAllMedia();
-  }
 });
 
 // Start observing the document
@@ -91,15 +92,15 @@ applyVolumeToAllMedia();
 
 // Listen for media element events to catch dynamically loaded sources
 document.addEventListener("loadedmetadata", (event) => {
-  if (event.target && (event.target.tagName === "AUDIO" || event.target.tagName === "VIDEO")) {
-    event.target.volume = savedVolume;
+  if (isMediaElement(event.target)) {
+    applyVolumeToElement(event.target);
     console.log(`[TJ Volume Mixer] Media loadedmetadata event, applied volume: ${savedVolume}`);
   }
 }, true);
 
 document.addEventListener("canplay", (event) => {
-  if (event.target && (event.target.tagName === "AUDIO" || event.target.tagName === "VIDEO")) {
-    event.target.volume = savedVolume;
+  if (isMediaElement(event.target)) {
+    applyVolumeToElement(event.target);
     console.log(`[TJ Volume Mixer] Media canplay event, applied volume: ${savedVolume}`);
   }
 }, true);
