@@ -1,7 +1,7 @@
 // Content script that monitors for new media elements and applies saved volume
 
 const VOLUME_CHANGE_THRESHOLD = 0.01; // Threshold for detecting meaningful volume changes
-const VOLUME_SAVE_DEBOUNCE_MS = 500; // Debounce time for saving volume changes
+const VOLUME_SAVE_DEBOUNCE_MS = 250; // Debounce time for saving volume changes
 
 let currentTabId = null;
 let currentUrl = getCurrentUrl(); // Use origin (protocol + domain) as persistent key
