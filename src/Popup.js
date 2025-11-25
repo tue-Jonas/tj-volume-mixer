@@ -90,12 +90,44 @@ export default function Popup() {
 
   const handleVolumeCommitChange = (tabId, value) => {
     const volume = value / 100;
-    setVolumes((prev) => {
-      const newVolumes = { ...prev, [tabId]: volume };
-      chrome.storage.local.set({ volumes: newVolumes });
-      return newVolumes;
+    
+    // Get the tab's URL to use as persistent key
+    chrome.tabs.get(tabId, (tab) => {
+      if (tab && tab.url) {
+        try {
+          // Only use origin for http(s) URLs, skip chrome://, about:, etc.
+          const url = new URL(tab.url);
+          if (url.protocol === 'http:' || url.protocol === 'https:') {
+            const urlKey = url.origin;
+            
+            setVolumes((prev) => {
+              const newVolumes = { ...prev };
+              newVolumes[tabId] = volume; // Keep tab-based for current session
+              newVolumes[urlKey] = volume; // Add URL-based for persistence
+              chrome.storage.local.set({ volumes: newVolumes });
+              return newVolumes;
+            });
+            console.log(`Volume committed for tab ${tabId} and URL ${urlKey}`);
+          } else {
+            // For non-http(s) URLs, only save by tab ID
+            setVolumes((prev) => {
+              const newVolumes = { ...prev, [tabId]: volume };
+              chrome.storage.local.set({ volumes: newVolumes });
+              return newVolumes;
+            });
+            console.log(`Volume committed for tab ${tabId} (non-http URL)`);
+          }
+        } catch (e) {
+          // Fallback to tab-based only if URL parsing fails
+          console.error(`Failed to parse URL: ${e.message}`);
+          setVolumes((prev) => {
+            const newVolumes = { ...prev, [tabId]: volume };
+            chrome.storage.local.set({ volumes: newVolumes });
+            return newVolumes;
+          });
+        }
+      }
     });
-    console.log(`Volume committed for tab ${tabId}`);
   };
 
   // Toggle mute state for a given tab.
@@ -120,7 +152,31 @@ export default function Popup() {
           }}
         >
           {tabs.map((tab) => {
-            const currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+            // Check both URL-based and tab-based storage, preferring URL-based
+            let currentVolume = 100;
+            try {
+              if (tab.url) {
+                const url = new URL(tab.url);
+                // Only use URL-based storage for http(s) URLs
+                if (url.protocol === 'http:' || url.protocol === 'https:') {
+                  const urlKey = url.origin;
+                  if (volumes[urlKey] !== undefined) {
+                    currentVolume = volumes[urlKey] * 100;
+                  } else if (volumes[tab.id] !== undefined) {
+                    currentVolume = volumes[tab.id] * 100;
+                  }
+                } else {
+                  // For non-http(s) URLs, only use tab-based storage
+                  currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+                }
+              } else {
+                // No URL, use tab-based only
+                currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+              }
+            } catch (e) {
+              // Fallback to tab-based if URL parsing fails
+              currentVolume = volumes[tab.id] !== undefined ? volumes[tab.id] * 100 : 100;
+            }
             return (
               <ListItem
                 key={tab.id}

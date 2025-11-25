@@ -9,5 +9,14 @@ chrome.runtime.onMessage.addListener((message, sender, sendResponse) => {
       args: [message.volume]
     });
     sendResponse({status: "Volume set"});
+    return true; // Keep the message channel open for async response
+  } else if (message.action === "getTabId") {
+    // Return the tab ID of the sender
+    if (sender.tab && sender.tab.id) {
+      sendResponse({ tabId: sender.tab.id });
+    } else {
+      sendResponse({ tabId: null });
+    }
+    return true; // Keep the message channel open for async response
   }
 });
