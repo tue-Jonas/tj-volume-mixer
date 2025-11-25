@@ -114,7 +114,7 @@ function handleVolumeChange(event) {
     const newVolume = element.volume;
     
     // Only update if volume actually changed
-    if (Math.abs(newVolume - savedVolume) > VOLUME_CHANGE_THRESHOLD) {
+    if (Math.abs(newVolume - savedVolume) >= VOLUME_CHANGE_THRESHOLD) {
       savedVolume = newVolume;
       console.log(`[TJ Volume Mixer] Detected volume change on media element: ${newVolume}`);
       
