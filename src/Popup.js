@@ -187,6 +187,11 @@ export default function Popup() {
       ) : (
         <TabList />
       )}
+      <Box sx={{ p: 1, textAlign: "center", opacity: 0.7 }}>
+        <Typography variant="caption">
+          v{chrome.runtime.getManifest().version}
+        </Typography>
+      </Box>
     </>
   );
 }

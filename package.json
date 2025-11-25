@@ -1,6 +1,6 @@
 {
   "name": "tj-volume-mixer",
-  "version": "1.0.3",
+  "version": "1.1.0",
   "private": true,
   "dependencies": {
     "@emotion/react": "^11.14.0",
@@ -16,7 +16,8 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
-    "eject": "react-scripts eject"
+    "eject": "react-scripts eject",
+    "version": "node scripts/update-manifest-version.js && git add public/manifest.json"
   },
   "eslintConfig": {
     "extends": [
