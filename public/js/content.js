@@ -178,8 +178,8 @@ observer.observe(document.documentElement, {
   subtree: true,
 });
 
-// Apply volume to existing media elements on load
-applyVolumeToAllMedia();
+// Note: applyVolumeToAllMedia() is called from loadVolumeSettings() after loading saved volume
+// This ensures we apply the correct saved volume, not the default value
 
 // Listen for media element events to catch dynamically loaded sources
 document.addEventListener("loadedmetadata", (event) => {
